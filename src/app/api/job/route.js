@@ -1,5 +1,8 @@
-import { authorizeRoles, isAuthenticatedUser } from "@/app/middlewares/adminAuth";
-import { JobPost } from "@/models/Jobpost";
+import {
+  authorizeRoles,
+  isAuthenticatedUser,
+} from "@/app/middlewares/adminAuth";
+import { JobPost } from "@/models/Jobpost.js";
 import { NextResponse } from "next/server";
 
 export async function GET() {

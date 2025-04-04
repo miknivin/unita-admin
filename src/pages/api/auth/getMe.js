@@ -1,8 +1,8 @@
 import { authenticateUser } from '@/app/middlewares/auth';
+import { JobPost } from '@/models/Jobpost';
 import dbConnect from '@/utils/dbConnect';
 import cors from 'cors';
 import { createRouter } from 'next-connect';
-
 // CORS configuration
 const corsOptions = {
   origin: process.env.NEXT_PUBLIC_CORS_ALLOWED_ORIGIN, // Adjust this to the front-end origin

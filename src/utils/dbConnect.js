@@ -1,6 +1,9 @@
  
 import { Applicant } from '@/models/Applicant';
 import { Company } from '@/models/Company';
+import Contacts from '@/models/Contacts';
+import { JobPost } from '@/models/Jobpost';
+import User from '@/models/User';
 import mongoose from 'mongoose';
 
 const MONGODB_URI = process.env.MONGODB_URI;
