@@ -29,6 +29,7 @@ export async function GET() {
 export async function POST(req) {
   try {
     const body = await req.json();
+    await dbConnect();
     const user = await isAuthenticatedUser(req);
 
     authorizeRoles(user, "admin");
