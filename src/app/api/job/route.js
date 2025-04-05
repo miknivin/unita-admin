@@ -3,10 +3,12 @@ import {
   isAuthenticatedUser,
 } from "@/app/middlewares/adminAuth";
 import { JobPost } from "@/models/Jobpost.js";
+import dbConnect from "@/utils/dbConnect";
 import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
+    await dbConnect();
     const jobPosts = await JobPost.find().populate("company");
     return NextResponse.json({
       success: true,
