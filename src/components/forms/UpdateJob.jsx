@@ -1,4 +1,3 @@
-// components/UpdateJob.jsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -16,19 +15,50 @@ const schema = yup.object().shape({
   company: yup.string().required("Company is required"),
   jobLocation: yup.string().optional(),
   salaryRange: yup.object().shape({
-    min: yup.number().nullable().optional(),
-    max: yup
-      .number()
-      .nullable()
+    aed: yup
+      .object()
       .optional()
-      .when("min", (min, schema) =>
-        min
-          ? schema.min(
-              min,
-              "Max salary must be greater than or equal to min salary"
-            )
-          : schema
-      ),
+      .shape({
+        min: yup
+          .number()
+          .nullable()
+          .optional()
+          .min(0, "Minimum AED salary cannot be negative"),
+        max: yup
+          .number()
+          .nullable()
+          .optional()
+          .test(
+            "max-gte-min",
+            "Max AED salary must be greater than or equal to min AED salary",
+            function (value) {
+              const min = this.parent.min;
+              return !min || !value || value >= min;
+            }
+          ),
+      }),
+    usd: yup
+      .object()
+      .optional()
+      .shape({
+        min: yup
+          .number()
+          .nullable()
+          .optional()
+          .min(0, "Minimum USD salary cannot be negative"),
+        max: yup
+          .number()
+          .nullable()
+          .optional()
+          .test(
+            "max-gte-min",
+            "Max USD salary must be greater than or equal to min USD salary",
+            function (value) {
+              const min = this.parent.min;
+              return !min || !value || value >= min;
+            }
+          ),
+      }),
   }),
   jobDescription: yup.string().required("Job description is required"),
   keyResponsibilities: yup
@@ -78,7 +108,10 @@ export default function UpdateJob() {
       company: "",
       jobTitle: "",
       jobLocation: "",
-      salaryRange: { min: "", max: "" },
+      salaryRange: {
+        aed: { min: "", max: "" },
+        usd: { min: "", max: "" },
+      },
       jobDescription: "",
       keyResponsibilities: [],
       requiredSkillsAndQualifications: [],
@@ -106,8 +139,14 @@ export default function UpdateJob() {
             jobTitle: jobData.jobTitle || "",
             jobLocation: jobData.jobLocation || "",
             salaryRange: {
-              min: jobData.salaryRange?.min || "",
-              max: jobData.salaryRange?.max || "",
+              aed: {
+                min: jobData.salaryRange?.aed?.min ?? "",
+                max: jobData.salaryRange?.aed?.max ?? "",
+              },
+              usd: {
+                min: jobData.salaryRange?.usd?.min ?? "",
+                max: jobData.salaryRange?.usd?.max ?? "",
+              },
             },
             jobDescription: jobData.jobDescription || "",
             keyResponsibilities: jobData.keyResponsibilities || [],
@@ -129,7 +168,6 @@ export default function UpdateJob() {
     };
     fetchData();
   }, [jobId, reset]);
-
   useEffect(() => {
     if (!isModalOpen) {
       const fetchCompanies = async () => {
@@ -183,8 +221,14 @@ export default function UpdateJob() {
         jobTitle: data.jobTitle,
         jobLocation: data.jobLocation || undefined,
         salaryRange: {
-          min: data.salaryRange.min || undefined,
-          max: data.salaryRange.max || undefined,
+          aed: {
+            min: data.salaryRange.aed.min || undefined,
+            max: data.salaryRange.aed.max || undefined,
+          },
+          usd: {
+            min: data.salaryRange.usd.min || undefined,
+            max: data.salaryRange.usd.max || undefined,
+          },
         },
         jobDescription: data.jobDescription,
         keyResponsibilities: data.keyResponsibilities,
@@ -320,51 +364,93 @@ export default function UpdateJob() {
                   </p>
                 )}
               </div>
-              <div className="w-full">
+              <div className="sm:col-span-2">
+                <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                  Salary Range
+                </label>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="">
+                  <div>
                     <label
-                      htmlFor="salaryMin"
+                      htmlFor="salaryAedMin"
                       className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                     >
-                      Salary Range (Min)
+                      AED (Min)
                     </label>
                     <input
                       type="number"
-                      id="salaryMin"
-                      {...register("salaryRange.min")}
+                      id="salaryAedMin"
+                      {...register("salaryRange.aed.min")}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                      placeholder="Min salary"
+                      placeholder="Min AED salary"
                     />
-                    {errors.salaryRange?.min && (
+                    {errors.salaryRange?.aed?.min && (
                       <p className="text-red-500 text-sm mt-1">
-                        {errors.salaryRange.min.message}
+                        {errors.salaryRange.aed.min.message}
                       </p>
                     )}
                   </div>
-                  <div className="">
+                  <div>
                     <label
-                      htmlFor="salaryMax"
+                      htmlFor="salaryAedMax"
                       className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                     >
-                      Salary Range (Max)
+                      AED (Max)
                     </label>
                     <input
                       type="number"
-                      id="salaryMax"
-                      {...register("salaryRange.max")}
+                      id="salaryAedMax"
+                      {...register("salaryRange.aed.max")}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                      placeholder="Max salary"
+                      placeholder="Max AED salary"
                     />
-                    {errors.salaryRange?.max && (
+                    {errors.salaryRange?.aed?.max && (
                       <p className="text-red-500 text-sm mt-1">
-                        {errors.salaryRange.max.message}
+                        {errors.salaryRange.aed.max.message}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="salaryUsdMin"
+                      className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                    >
+                      USD (Min)
+                    </label>
+                    <input
+                      type="number"
+                      id="salaryUsdMin"
+                      {...register("salaryRange.usd.min")}
+                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                      placeholder="Min USD salary"
+                    />
+                    {errors.salaryRange?.usd?.min && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.salaryRange.usd.min.message}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="salaryUsdMax"
+                      className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                    >
+                      USD (Max)
+                    </label>
+                    <input
+                      type="number"
+                      id="salaryUsdMax"
+                      {...register("salaryRange.usd.max")}
+                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                      placeholder="Max USD salary"
+                    />
+                    {errors.salaryRange?.usd?.max && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.salaryRange.usd.max.message}
                       </p>
                     )}
                   </div>
                 </div>
               </div>
-              <div className="w-full"></div>
               <div className="sm:col-span-2">
                 <label className="mb-3 block text-sm font-medium text-gray-900 dark:text-white">
                   Benefits

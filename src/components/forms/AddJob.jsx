@@ -3,32 +3,56 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
-
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import Cross from "../icons/Cross";
 import Link from "next/link";
 import AddCompany from "../modals/AddCompany";
-import { usePathname } from "next/navigation";
+
 const schema = yup.object().shape({
   jobTitle: yup.string().required("Job title is required"),
   company: yup.string().required("Company is required"),
   jobLocation: yup.string().optional(),
   salaryRange: yup.object().shape({
-    min: yup.number().nullable().optional(),
-    max: yup
-      .number()
-      .nullable()
-      .optional()
-      .when("min", (min, schema) =>
-        min
-          ? schema.min(
-              min,
-              "Max salary must be greater than or equal to min salary"
-            )
-          : schema
-      ),
+    aed: yup.object().shape({
+      min: yup
+        .number()
+        .nullable()
+        .optional()
+        .min(0, "Minimum AED salary cannot be negative"),
+      max: yup
+        .number()
+        .nullable()
+        .optional()
+        .when("min", (min, schema) =>
+          min
+            ? schema.min(
+                min,
+                "Max AED salary must be greater than or equal to min AED salary"
+              )
+            : schema
+        ),
+    }),
+    usd: yup.object().shape({
+      min: yup
+        .number()
+        .nullable()
+        .optional()
+        .min(0, "Minimum USD salary cannot be negative"),
+      max: yup
+        .number()
+        .nullable()
+        .optional()
+        .when("min", (min, schema) =>
+          min
+            ? schema.min(
+                min,
+                "Max USD salary must be greater than or equal to min USD salary"
+              )
+            : schema
+        ),
+    }),
   }),
   jobDescription: yup.string().required("Job description is required"),
   keyResponsibilities: yup
@@ -74,7 +98,10 @@ export default function AddJob() {
       company: "",
       jobTitle: "",
       jobLocation: "",
-      salaryRange: { min: "", max: "" },
+      salaryRange: {
+        aed: { min: "", max: "" },
+        usd: { min: "", max: "" },
+      },
       jobDescription: "",
       keyResponsibilities: [],
       requiredSkillsAndQualifications: [],
@@ -119,7 +146,6 @@ export default function AddJob() {
     }));
   };
 
-  // Add items to array fields
   const addToArrayField = (field, value) => {
     if (value.trim()) {
       const updatedArray = [...formData[field], value.trim()];
@@ -135,13 +161,11 @@ export default function AddJob() {
     }
   };
 
-  // Remove items from array fields
   const removeFromArrayField = (field, index) => {
     const updatedArray = formData[field].filter((_, i) => i !== index);
     setValue(field, updatedArray, { shouldValidate: true });
   };
 
-  // Handle form submission
   const onSubmit = async (data) => {
     setError("");
     setSuccess("");
@@ -153,8 +177,14 @@ export default function AddJob() {
         jobTitle: data.jobTitle,
         jobLocation: data.jobLocation || undefined,
         salaryRange: {
-          min: data.salaryRange.min || undefined,
-          max: data.salaryRange.max || undefined,
+          aed: {
+            min: data.salaryRange.aed.min || undefined,
+            max: data.salaryRange.aed.max || undefined,
+          },
+          usd: {
+            min: data.salaryRange.usd.min || undefined,
+            max: data.salaryRange.usd.max || undefined,
+          },
         },
         jobDescription: data.jobDescription,
         keyResponsibilities: data.keyResponsibilities,
@@ -168,7 +198,10 @@ export default function AddJob() {
       setValue("company", "");
       setValue("jobTitle", "");
       setValue("jobLocation", "");
-      setValue("salaryRange", { min: "", max: "" });
+      setValue("salaryRange", {
+        aed: { min: "", max: "" },
+        usd: { min: "", max: "" },
+      });
       setValue("jobDescription", "");
       setValue("keyResponsibilities", []);
       setValue("requiredSkillsAndQualifications", []);
@@ -187,12 +220,8 @@ export default function AddJob() {
       <div className="py-8 px-4 mx-auto lg:py-16 max-w-screen-lg">
         <Link
           href={"/home/jobs"}
-          id="dropdownActionButton"
-          data-dropdown-toggle="dropdownAction"
           className="inline-flex items-center text-gray-500 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-3 py-1.5 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700 my-4"
-          type="button"
         >
-          <span className="sr-only">Action button</span>
           Go Back
         </Link>
         <h2 className="mb-4 text-xl font-bold text-gray-900 dark:text-white">
@@ -251,7 +280,6 @@ export default function AddJob() {
               >
                 <p>Company</p>
                 <button
-                  role="button"
                   type="button"
                   onClick={() => setIsModalOpen(true)}
                   className="text-blue-600 underline"
@@ -297,51 +325,93 @@ export default function AddJob() {
                 </p>
               )}
             </div>
-            <div className="w-full">
+            <div className="sm:col-span-2">
+              <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                Salary Range
+              </label>
               <div className="grid grid-cols-2 gap-4">
-                <div className="">
+                <div>
                   <label
-                    htmlFor="salaryMin"
+                    htmlFor="salaryAedMin"
                     className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                   >
-                    Salary Range (Min)
+                    AED (Min)
                   </label>
                   <input
                     type="number"
-                    id="salaryMin"
-                    {...register("salaryRange.min")}
+                    id="salaryAedMin"
+                    {...register("salaryRange.aed.min")}
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                    placeholder="Min salary"
+                    placeholder="Min AED salary"
                   />
-                  {errors.salaryRange?.min && (
+                  {errors.salaryRange?.aed?.min && (
                     <p className="text-red-500 text-sm mt-1">
-                      {errors.salaryRange.min.message}
+                      {errors.salaryRange.aed.min.message}
                     </p>
                   )}
                 </div>
-                <div className="">
+                <div>
                   <label
-                    htmlFor="salaryMax"
+                    htmlFor="salaryAedMax"
                     className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                   >
-                    Salary Range (Max)
+                    AED (Max)
                   </label>
                   <input
                     type="number"
-                    id="salaryMax"
-                    {...register("salaryRange.max")}
+                    id="salaryAedMax"
+                    {...register("salaryRange.aed.max")}
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                    placeholder="Max salary"
+                    placeholder="Max AED salary"
                   />
-                  {errors.salaryRange?.max && (
+                  {errors.salaryRange?.aed?.max && (
                     <p className="text-red-500 text-sm mt-1">
-                      {errors.salaryRange.max.message}
+                      {errors.salaryRange.aed.max.message}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label
+                    htmlFor="salaryUsdMin"
+                    className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                  >
+                    USD (Min)
+                  </label>
+                  <input
+                    type="number"
+                    id="salaryUsdMin"
+                    {...register("salaryRange.usd.min")}
+                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                    placeholder="Min USD salary"
+                  />
+                  {errors.salaryRange?.usd?.min && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.salaryRange.usd.min.message}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label
+                    htmlFor="salaryUsdMax"
+                    className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                  >
+                    USD (Max)
+                  </label>
+                  <input
+                    type="number"
+                    id="salaryUsdMax"
+                    {...register("salaryRange.usd.max")}
+                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                    placeholder="Max USD salary"
+                  />
+                  {errors.salaryRange?.usd?.max && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.salaryRange.usd.max.message}
                     </p>
                   )}
                 </div>
               </div>
             </div>
-            <div className="w-full"></div>
             <div className="sm:col-span-2">
               <label className="mb-3 block text-sm font-medium text-gray-900 dark:text-white">
                 Benefits
@@ -478,7 +548,7 @@ export default function AddJob() {
                   <button
                     key={index}
                     type="button"
-                    className="inline-flex items-center  px-5 py-2.5 text-sm font-medium text-start text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                    className="inline-flex items-center px-5 py-2.5 text-sm font-medium text-start text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
                   >
                     {responsibility}
                     <span

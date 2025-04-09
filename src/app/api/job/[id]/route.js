@@ -1,5 +1,8 @@
 // app/api/jobPosts/[id]/route.js
-import { authorizeRoles, isAuthenticatedUser } from "@/app/middlewares/adminAuth";
+import {
+  authorizeRoles,
+  isAuthenticatedUser,
+} from "@/app/middlewares/adminAuth";
 import { JobPost } from "@/models/Jobpost";
 import { NextResponse } from "next/server";
 
@@ -43,6 +46,7 @@ export async function PUT(req, { params }) {
     const jobPost = await JobPost.findByIdAndUpdate(id, body, {
       new: true,
       runValidators: true,
+      context: "query",
     }).populate("company");
     if (!jobPost) {
       return NextResponse.json(
